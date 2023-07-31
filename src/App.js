@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./App.css";
 import penIcon from "./images/pen.png";
 import textIcon from "./images/text.png";
@@ -16,12 +16,28 @@ const ImageCropper = () => {
     zoom: false,
     filters: false,
   });
-  const [croppedImage, setCroppedImage] = useState(null);
-  const imgRef = useRef(null);
+  const imgElement = new Image();
   const canvasRef = useRef(null);
   const [cropping, setCropping] = useState(false);
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [selectedFilter, setSelectedFilter] = useState("");
+
+  const updateCanvas = () => {
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d");
+      const { naturalWidth: width, naturalHeight: height } = imgElement;
+      ctx.canvas.width = width;
+      ctx.canvas.height = height;
+      ctx.drawImage(imgElement, 0, 0, width, height);
+    }
+  };
+
+  useEffect(() => {
+    if (image) {
+      imgElement.onload = updateCanvas;
+      imgElement.src = image;
+    }
+  }, [image]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -29,27 +45,26 @@ const ImageCropper = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result);
-        setCroppedImage(null);
         setSelectedFilter("");
+        imgElement.src = reader.result;
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleMouseDown = (e) => {
-    if (imgRef.current && !cropping) {
-      const rect = imgRef.current.getBoundingClientRect();
+    if (canvasRef.current && !cropping) {
+      const rect = canvasRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       setCropArea((prev) => ({ ...prev, x, y, width: 0, height: 0 }));
-      setCroppedImage(null);
       setCropping(true);
     }
   };
 
   const handleMouseMove = (e) => {
     if (cropping) {
-      const rect = imgRef.current.getBoundingClientRect();
+      const rect = canvasRef.current.getBoundingClientRect();
       const width = e.clientX - rect.left - cropArea.x;
       const height = e.clientY - rect.top - cropArea.y;
       setCropArea((prev) => ({ ...prev, width, height }));
@@ -61,68 +76,26 @@ const ImageCropper = () => {
   };
 
   const handleCrop = () => {
-    if (imgRef.current && canvasRef.current) {
+    if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
       const { x, y, width, height } = cropArea;
-      ctx.drawImage(imgRef.current, x, y, width, height, 0, 0, width, height);
-      const croppedDataURL = canvasRef.current.toDataURL();
-      setCroppedImage(croppedDataURL);
+      const cropped = ctx.getImageData(x, y, width, height);
+      const canvasTemp = document.createElement('canvas');
+      const ctxTemp = canvasTemp.getContext('2d');
+      canvasTemp.width = width;
+      canvasTemp.height = height;
+      ctxTemp.putImageData(cropped, 0, 0);
+      setImage(canvasTemp.toDataURL());
     }
   };
 
   const handleAddFilter = () => {
-    if (croppedImage) {
-      let filterStyle = "";
-      switch (selectedFilter) {
-        case "grayscale":
-          filterStyle = "grayscale(100%)";
-          break;
-        case "sepia":
-          filterStyle = "sepia(100%)";
-          break;
-        // Add more filters here as needed
-        default:
-          filterStyle = "";
-      }
-      document.getElementById("cropped-img").style.filter = filterStyle;
+    if (image) {
+      //...
     }
   };
 
   return (
-    // <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-
-    //   <div style={{ marginLeft: '20px' }}>
-    //     {croppedImage && (
-    //       <div>
-    //         <h2>Cropped Image</h2>
-
-    //         <div>
-    //           <label>
-    //             <input
-    //               type="radio"
-    //               value="grayscale"
-    //               checked={selectedFilter === 'grayscale'}
-    //               onChange={() => setSelectedFilter('grayscale')}
-    //             />
-    //             Grayscale
-    //           </label>
-    //           <label>
-    //             <input
-    //               type="radio"
-    //               value="sepia"
-    //               checked={selectedFilter === 'sepia'}
-    //               onChange={() => setSelectedFilter('sepia')}
-    //             />
-    //             Sepia
-    //           </label>
-    //           {/* Add more filter options here */}
-    //         </div>
-    //         <button onClick={handleAddFilter}>Add Filter</button>
-    //       </div>
-    //     )}
-    //   </div>
-    //   <canvas ref={canvasRef} style={{ display: 'none' }} />
-    // </div>
     <div className="editor-bg">
       <div className="toolbar-container">
         <div className="toolbar">
@@ -161,35 +134,18 @@ const ImageCropper = () => {
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               style={{ position: "relative", display: "inline-block" }}
-            >{
-              !croppedImage && (
-                <img
-                ref={imgRef}
-                src={image}
-                className=""
-                alt="Original"
-                draggable="false"
-                style={{ maxWidth: "100%", height: "auto" }}
+            >
+              <canvas
+                ref={canvasRef}
+                style={{
+                  maxWidth: "100%",
+                  height: "auto"
+                }}
               />
-              )
-            }
-
-              {
-                croppedImage && (
-                  <img
-                  id="cropped-img"
-                  src={croppedImage}
-                  alt="Cropped"
-                  style={{ maxWidth: '100%', height: 'auto' }}
-                />
-
-                )
-  
-              }
 
               {cropping && (
                 <div
-                className="cropper-box"
+                  className="cropper-box"
                   style={{
                     border: "1px dashed red",
                     position: "absolute",
