@@ -21,6 +21,8 @@ const ImageCropper = () => {
   const [cropping, setCropping] = useState(false);
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [selectedFilter, setSelectedFilter] = useState("");
+  const [drawing, setDrawing] = useState(false);
+  const [drawStart, setDrawStart] = useState({ x: 0, y: 0 });
 
   const updateCanvas = () => {
     if (canvasRef.current) {
@@ -53,26 +55,49 @@ const ImageCropper = () => {
   };
 
   const handleMouseDown = (e) => {
-    if (canvasRef.current && !cropping) {
+    if (canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      setCropArea((prev) => ({ ...prev, x, y, width: 0, height: 0 }));
-      setCropping(true);
+
+      if (tools.draw) {
+        // Start drawing
+        setDrawStart({ x, y });
+        setDrawing(true);
+      } else if (tools.crop && !cropping) {
+        setCropArea((prev) => ({ ...prev, x, y, width: 0, height: 0 }));
+        setCropping(true);
+      }
     }
   };
 
   const handleMouseMove = (e) => {
-    if (cropping) {
+    if (canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect();
-      const width = e.clientX - rect.left - cropArea.x;
-      const height = e.clientY - rect.top - cropArea.y;
-      setCropArea((prev) => ({ ...prev, width, height }));
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      if (drawing && tools.draw) {
+        const ctx = canvasRef.current.getContext('2d');
+        ctx.beginPath();
+        ctx.moveTo(drawStart.x, drawStart.y);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        setDrawStart({ x, y });
+      } else if (tools.crop && cropping) {
+        const width = x - cropArea.x;
+        const height = y - cropArea.y;
+        setCropArea((prev) => ({ ...prev, width, height }));
+      }
     }
   };
 
   const handleMouseUp = () => {
-    setCropping(false);
+    if (drawing) {
+      setDrawing(false);
+    } else {
+      setCropping(false);
+    }
   };
 
   const handleCrop = () => {
@@ -99,19 +124,19 @@ const ImageCropper = () => {
     <div className="editor-bg">
       <div className="toolbar-container">
         <div className="toolbar">
-          <div className="tool">
+          <div className="tool" onClick={() => setTools({ draw: true, text: false, crop: false, zoom: false, filters: false })}>
             <img className="tool-icon" src={penIcon} />
           </div>
-          <div className="tool">
+          <div className="tool" onClick={() => setTools({ draw: false, text: true, crop: false, zoom: false, filters: false })}>
             <img className="tool-icon" src={textIcon} />
           </div>
-          <div className="tool">
+          <div className="tool" onClick={() => setTools({ draw: false, text: false, crop: false, zoom: true, filters: false })}>
             <img className="tool-icon" src={zoomIcon} />
           </div>
-          <div className="tool">
+          <div className="tool" onClick={() => setTools({ draw: false, text: false, crop: true, zoom: false, filters: false })}>
             <img className="tool-icon" src={cropIcon} />
           </div>
-          <div className="tool">
+          <div className="tool" onClick={() => setTools({ draw: false, text: false, crop: false, zoom: false, filters: true })}>
             <img className="tool-icon" src={filterIcon} />
           </div>
         </div>
