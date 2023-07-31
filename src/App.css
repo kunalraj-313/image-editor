@@ -63,6 +63,17 @@
   right: 30px;
 }
 
+.image-edit-area{
+  width: 1000px;
+  border: 1px solid red;
+  height:700px;
+  margin-right: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+
 .upload-dialog {
   width: 300px;
   height: 150px;

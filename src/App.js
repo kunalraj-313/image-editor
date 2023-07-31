@@ -95,12 +95,7 @@ const ImageCropper = () => {
     //     {croppedImage && (
     //       <div>
     //         <h2>Cropped Image</h2>
-    //         <img
-    //           id="cropped-img"
-    //           src={croppedImage}
-    //           alt="Cropped"
-    //           style={{ maxWidth: '100%', height: 'auto' }}
-    //         />
+
     //         <div>
     //           <label>
     //             <input
@@ -148,7 +143,7 @@ const ImageCropper = () => {
           </div>
         </div>
       </div>
-      <div className="image-edit area">
+      <div className="image-edit-area">
         {!image && (
           <div className="upload-dialog">
             <span>Upload an Image to get started</span>
@@ -166,8 +161,9 @@ const ImageCropper = () => {
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               style={{ position: "relative", display: "inline-block" }}
-            >
-              <img
+            >{
+              !croppedImage && (
+                <img
                 ref={imgRef}
                 src={image}
                 className=""
@@ -175,8 +171,25 @@ const ImageCropper = () => {
                 draggable="false"
                 style={{ maxWidth: "100%", height: "auto" }}
               />
+              )
+            }
+
+              {
+                croppedImage && (
+                  <img
+                  id="cropped-img"
+                  src={croppedImage}
+                  alt="Cropped"
+                  style={{ maxWidth: '100%', height: 'auto' }}
+                />
+
+                )
+  
+              }
+
               {cropping && (
                 <div
+                className="cropper-box"
                   style={{
                     border: "1px dashed red",
                     position: "absolute",
