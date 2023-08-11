@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import './styles.css'
 
 
-export default function ColorPalette() {
+export default function ColorPalette({ colorSelector }) {
+  
+ 
 
   const [colors, setColors] = useState({
     primary: {
@@ -14,6 +16,14 @@ export default function ColorPalette() {
       color:'#FFFFFF'
     }
   })
+
+   useEffect(() => {
+    const selectedColor = colors.primary.state
+      ? colors.primary.color
+      : colors.secondary.color;
+    colorSelector(selectedColor);
+   }, [colors, colorSelector]);
+  
 const colorsGrid = [
   '#000000',
   '#7F7F7F',

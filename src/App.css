@@ -50,7 +50,9 @@
   transition: background-color 0.5s;
   cursor: pointer;
 }
-
+.active-tool {
+  background-color: black;
+}
 .sidepanel {
   height: 564px;
   width: 232px;
@@ -63,15 +65,14 @@
   right: 30px;
 }
 
-.image-edit-area{
+.image-edit-area {
   width: 1000px;
   border: 1px solid red;
-  height:700px;
+  height: 700px;
   margin-right: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .upload-dialog {

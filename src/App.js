@@ -9,6 +9,7 @@ import ColorPalette from "./components/ColorPalette";
 
 const ImageCropper = () => {
   const [image, setImage] = useState(null);
+  const [color, setColor] = useState("#0000");
   const [tools, setTools] = useState({
     draw: true,
     text: false,
@@ -78,7 +79,8 @@ const ImageCropper = () => {
       const y = e.clientY - rect.top;
 
       if (drawing && tools.draw) {
-        const ctx = canvasRef.current.getContext('2d');
+        const ctx = canvasRef.current.getContext("2d");
+        ctx.strokeStyle = color;
         ctx.beginPath();
         ctx.moveTo(drawStart.x, drawStart.y);
         ctx.lineTo(x, y);
@@ -105,8 +107,8 @@ const ImageCropper = () => {
       const ctx = canvasRef.current.getContext("2d");
       const { x, y, width, height } = cropArea;
       const cropped = ctx.getImageData(x, y, width, height);
-      const canvasTemp = document.createElement('canvas');
-      const ctxTemp = canvasTemp.getContext('2d');
+      const canvasTemp = document.createElement("canvas");
+      const ctxTemp = canvasTemp.getContext("2d");
       canvasTemp.width = width;
       canvasTemp.height = height;
       ctxTemp.putImageData(cropped, 0, 0);
@@ -120,23 +122,81 @@ const ImageCropper = () => {
     }
   };
 
+  const handleSelectedColor = (val) => {
+    setColor(val);
+  };
   return (
     <div className="editor-bg">
       <div className="toolbar-container">
         <div className="toolbar">
-          <div className="tool" onClick={() => setTools({ draw: true, text: false, crop: false, zoom: false, filters: false })}>
+          <div
+            className={`tool ${tools.draw ? "active-tool" : ""}`}
+            onClick={() =>
+              setTools({
+                draw: true,
+                text: false,
+                crop: false,
+                zoom: false,
+                filters: false,
+              })
+            }
+          >
             <img className="tool-icon" src={penIcon} />
           </div>
-          <div className="tool" onClick={() => setTools({ draw: false, text: true, crop: false, zoom: false, filters: false })}>
+          <div
+            className={`tool ${tools.text ? "active-tool" : ""}`}
+            onClick={() =>
+              setTools({
+                draw: false,
+                text: true,
+                crop: false,
+                zoom: false,
+                filters: false,
+              })
+            }
+          >
             <img className="tool-icon" src={textIcon} />
           </div>
-          <div className="tool" onClick={() => setTools({ draw: false, text: false, crop: false, zoom: true, filters: false })}>
+          <div
+            className="tool"
+            onClick={() =>
+              setTools({
+                draw: false,
+                text: false,
+                crop: false,
+                zoom: true,
+                filters: false,
+              })
+            }
+          >
             <img className="tool-icon" src={zoomIcon} />
           </div>
-          <div className="tool" onClick={() => setTools({ draw: false, text: false, crop: true, zoom: false, filters: false })}>
+          <div
+            className={`tool ${tools.crop ? "active-tool" : ""}`}
+            onClick={() =>
+              setTools({
+                draw: false,
+                text: false,
+                crop: true,
+                zoom: false,
+                filters: false,
+              })
+            }
+          >
             <img className="tool-icon" src={cropIcon} />
           </div>
-          <div className="tool" onClick={() => setTools({ draw: false, text: false, crop: false, zoom: false, filters: true })}>
+          <div
+            className="tool"
+            onClick={() =>
+              setTools({
+                draw: false,
+                text: false,
+                crop: false,
+                zoom: false,
+                filters: true,
+              })
+            }
+          >
             <img className="tool-icon" src={filterIcon} />
           </div>
         </div>
@@ -164,7 +224,7 @@ const ImageCropper = () => {
                 ref={canvasRef}
                 style={{
                   maxWidth: "100%",
-                  height: "auto"
+                  height: "auto",
                 }}
               />
 
@@ -188,7 +248,9 @@ const ImageCropper = () => {
         )}
       </div>
       <div className="sidepanel">
-        {(tools.draw || tools.text) && <ColorPalette />}
+        {(tools.draw || tools.text) && (
+          <ColorPalette colorSelector={handleSelectedColor} />
+        )}
       </div>
     </div>
   );
