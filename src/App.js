@@ -20,18 +20,54 @@ const ImageCropper = () => {
   const imgElement = new Image();
   const canvasRef = useRef(null);
   const [cropping, setCropping] = useState(false);
+  const [textAreaList, handleTextArea] = useState([]);
+  const [undoList, handleActions] = useState([]);
+  const [textArea, setTextArea] = useState({
+    x: null,
+    y: null,
+    startingX: null,
+  });
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [selectedFilter, setSelectedFilter] = useState("");
   const [drawing, setDrawing] = useState(false);
   const [drawStart, setDrawStart] = useState({ x: 0, y: 0 });
 
+  // const updateCanvas = () => {
+  //   if (canvasRef.current) {
+  //     const ctx = canvasRef.current.getContext("2d");
+  //     const { naturalWidth: width, naturalHeight: height } = imgElement;
+  //     ctx.canvas.width = width;
+  //     ctx.canvas.height = height;
+  //     ctx.drawImage(imgElement, 0, 0, width, height);
+  //   }
+  // };
+
   const updateCanvas = () => {
     if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext("2d");
-      const { naturalWidth: width, naturalHeight: height } = imgElement;
-      ctx.canvas.width = width;
-      ctx.canvas.height = height;
-      ctx.drawImage(imgElement, 0, 0, width, height);
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+
+      const { naturalWidth: imgWidth, naturalHeight: imgHeight } = imgElement;
+      const parentDiv = canvas.closest(".image-edit-area");
+      const maxWidth = parentDiv.clientWidth;
+      const maxHeight = parentDiv.clientHeight;
+
+      // calculate the aspect ratio of the image
+      const aspectRatio = imgWidth / imgHeight;
+
+      // calculate the new dimensions to fit within the parent div
+      let newWidth = maxWidth;
+      let newHeight = maxWidth / aspectRatio;
+
+      if (newHeight > maxHeight) {
+        newHeight = maxHeight;
+        newWidth = maxHeight * aspectRatio;
+      }
+
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+
+      ctx.drawImage(imgElement, 0, 0, newWidth, newHeight);
     }
   };
 
@@ -55,8 +91,27 @@ const ImageCropper = () => {
     }
   };
 
+  // const handleUndoRedo = () => {
+
+  //   let count = undolist.length - 1;
+
+  //   if (count < undolist.length - 1) {
+
+  //     if (ctrl + z) {
+  //       count--;
+  //       canvas = undolist[count]
+  //     } else if (ctrl + y) {
+  //       count++;
+  //       canvas = undolist[count]
+  //     }
+  //   }
+  // }
+
   const handleMouseDown = (e) => {
     if (canvasRef.current) {
+      var test = canvasRef.current.toDataURL();
+      console.log(test);
+
       const rect = canvasRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -65,9 +120,33 @@ const ImageCropper = () => {
         // Start drawing
         setDrawStart({ x, y });
         setDrawing(true);
-      } else if (tools.crop && !cropping) {
+      }
+      // Start cropping
+      else if (tools.crop && !cropping) {
         setCropArea((prev) => ({ ...prev, x, y, width: 0, height: 0 }));
         setCropping(true);
+      }
+      // start adding text
+      else if (tools.text) {
+        setTextArea({
+          x: e.pageX - canvasRef.current.offsetLeft,
+          y: e.pageY - canvasRef.current.offsetTop,
+          startingX: x,
+        });
+        const ctx = canvasRef.current.getContext("2d");
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "white";
+        document.addEventListener(
+          "keydown",
+          (e) => {
+            ctx.fillText(e.key, textArea.x, textArea.y);
+            setTextArea((prev) => ({
+              ...prev, // Keep the previous values for y and startingX
+              x: prev.x + ctx.measureText(e.key).width, // Update the x value
+            }));
+          },
+          false
+        );
       }
     }
   };
