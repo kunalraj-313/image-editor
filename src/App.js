@@ -110,8 +110,6 @@ const ImageCropper = () => {
   const handleMouseDown = (e) => {
     if (canvasRef.current) {
       var test = canvasRef.current.toDataURL();
-      console.log(test);
-
       const rect = canvasRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -126,28 +124,25 @@ const ImageCropper = () => {
         setCropArea((prev) => ({ ...prev, x, y, width: 0, height: 0 }));
         setCropping(true);
       }
-      // start adding text
-      else if (tools.text) {
-        setTextArea({
-          x: e.pageX - canvasRef.current.offsetLeft,
-          y: e.pageY - canvasRef.current.offsetTop,
-          startingX: x,
-        });
-        const ctx = canvasRef.current.getContext("2d");
-        ctx.font = "16px Arial";
-        ctx.fillStyle = "white";
-        document.addEventListener(
-          "keydown",
-          (e) => {
-            ctx.fillText(e.key, textArea.x, textArea.y);
-            setTextArea((prev) => ({
-              ...prev, // Keep the previous values for y and startingX
-              x: prev.x + ctx.measureText(e.key).width, // Update the x value
-            }));
-          },
-          false
-        );
-      }
+    }
+  };
+
+  const handleCanvasClick = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    let xPos = e.clientX - rect.left;
+    let yPos = e.clientY - rect.top;
+    if (tools.text) {
+      const ctx = canvasRef.current.getContext("2d");
+      ctx.font = "16px Arial";
+      ctx.fillStyle = color;
+      document.addEventListener(
+        "keydown",
+        (e) => {
+          ctx.fillText(e.key, xPos, yPos);
+          xPos += ctx.measureText(e.key).width;
+        },
+        false
+      );
     }
   };
 
@@ -301,6 +296,7 @@ const ImageCropper = () => {
             >
               <canvas
                 ref={canvasRef}
+                onClick={handleCanvasClick}
                 style={{
                   maxWidth: "100%",
                   height: "auto",
