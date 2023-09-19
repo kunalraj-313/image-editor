@@ -173,6 +173,7 @@ const ImageCropper = () => {
       setDrawing(false);
     } else {
       setCropping(false);
+      handleCrop();
     }
   };
 
@@ -318,7 +319,6 @@ const ImageCropper = () => {
                 />
               )}
             </div>
-            <button onClick={handleCrop}>Crop Image</button>
           </div>
         )}
       </div>
