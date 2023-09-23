@@ -53,6 +53,22 @@
 .active-tool {
   background-color: black;
 }
+.save-btn {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: rgba(30, 30, 30, 0.41);
+  box-shadow: 1.4047514200210571px 1.4047514200210571px 2.8095028400421143px 0px
+    rgba(255, 255, 255, 0.12) inset;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.save-btn:hover {
+  cursor: pointer;
+}
 .sidepanel {
   height: 564px;
   width: 232px;
@@ -88,6 +104,36 @@
   align-items: center;
   font-family: "Poppins", sans-serif;
   color: white;
+}
+
+.input-dialog {
+  width: 300px;
+  height: 150px;
+  border-radius: 10px;
+  border: 1px solid #1e1e1e;
+  background: rgba(30, 30, 30, 0.62);
+  box-shadow: 1.4047514200210571px 1.4047514200210571px 2.8095028400421143px 0px
+    rgba(255, 255, 255, 0.12) inset;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  font-family: "Poppins", sans-serif;
+  color: white;
+  position: absolute;
+  left: 45%;
+  top: 45%;
+  z-index: 999;
+  backdrop-filter: blur(20px);
+}
+
+.custom-text-input {
+  display: inline-block;
+  background-color: #ccc;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: black;
+  cursor: pointer;
 }
 
 .custom-file-input {

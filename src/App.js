@@ -5,6 +5,7 @@ import textIcon from "./images/text.png";
 import zoomIcon from "./images/zoom.png";
 import cropIcon from "./images/crop.png";
 import filterIcon from "./images/filter.png";
+import saveIcon from "./images/save.png";
 import ColorPalette from "./components/ColorPalette";
 
 const ImageCropper = () => {
@@ -20,13 +21,14 @@ const ImageCropper = () => {
   const imgElement = new Image();
   const canvasRef = useRef(null);
   const [cropping, setCropping] = useState(false);
-  const [textAreaList, handleTextArea] = useState([]);
   const [undoList, handleActions] = useState([]);
   const [textArea, setTextArea] = useState({
     x: null,
     y: null,
-    startingX: null,
   });
+  const [text, setText] = useState("");
+  const [isTyping, toggleTyping] = useState(false);
+
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [selectedFilter, setSelectedFilter] = useState("");
   const [drawing, setDrawing] = useState(false);
@@ -71,7 +73,22 @@ const ImageCropper = () => {
     }
   };
 
+  const canvasStateChange = () => {
+    const canvas = canvasRef.current;
+    let lastAction = canvas.toDataURL();
+    let actions = undoList;
+    if (actions.length < 6) {
+      actions.push(lastAction);
+      handleActions(actions);
+    } else {
+      let resetActionsArray = actions.shift();
+      resetActionsArray.push(lastAction);
+      handleActions(resetActionsArray);
+    }
+  };
+
   useEffect(() => {
+    console.log("Component Re-rendered");
     if (image) {
       imgElement.onload = updateCanvas;
       imgElement.src = image;
@@ -109,7 +126,6 @@ const ImageCropper = () => {
 
   const handleMouseDown = (e) => {
     if (canvasRef.current) {
-      var test = canvasRef.current.toDataURL();
       const rect = canvasRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -128,21 +144,25 @@ const ImageCropper = () => {
   };
 
   const handleCanvasClick = (e) => {
-    const rect = canvasRef.current.getBoundingClientRect();
-    let xPos = e.clientX - rect.left;
-    let yPos = e.clientY - rect.top;
     if (tools.text) {
+      toggleTyping(true);
+      const rect = canvasRef.current.getBoundingClientRect();
+      let xPos = e.clientX - rect.left;
+      let yPos = e.clientY - rect.top;
+      setTextArea({ x: xPos, y: yPos });
+    }
+  };
+
+  const handleTextSubmit = (e) => {
+    if (e.key === "Escape") {
+      console.log(e);
+      let temp = text;
       const ctx = canvasRef.current.getContext("2d");
       ctx.font = "16px Arial";
       ctx.fillStyle = color;
-      document.addEventListener(
-        "keydown",
-        (e) => {
-          ctx.fillText(e.key, xPos, yPos);
-          xPos += ctx.measureText(e.key).width;
-        },
-        false
-      );
+      ctx.fillText(temp, textArea.x, textArea.y);
+      canvasStateChange();
+      toggleTyping(false);
     }
   };
 
@@ -171,9 +191,11 @@ const ImageCropper = () => {
   const handleMouseUp = () => {
     if (drawing) {
       setDrawing(false);
-    } else {
+      canvasStateChange();
+    } else if (tools.crop) {
       setCropping(false);
       handleCrop();
+      canvasStateChange();
     }
   };
 
@@ -199,6 +221,15 @@ const ImageCropper = () => {
 
   const handleSelectedColor = (val) => {
     setColor(val);
+  };
+
+  const fileSave = () => {
+    let canvas = canvasRef.current;
+    let downlaodURL = canvas.toDataURL();
+    const downloadLink = document.createElement("a");
+    downloadLink.href = downlaodURL;
+    downloadLink.download = "canvas_image.png";
+    downloadLink.click();
   };
   return (
     <div className="editor-bg">
@@ -277,12 +308,30 @@ const ImageCropper = () => {
         </div>
       </div>
       <div className="image-edit-area">
+        {image && (
+          <div className="save-btn" onClick={fileSave}>
+            <img src={saveIcon} />
+          </div>
+        )}
         {!image && (
           <div className="upload-dialog">
             <span>Upload an Image to get started</span>
             <label className="custom-file-input">
               <span>Choose File</span>
               <input type="file" onChange={handleFileChange} />
+            </label>
+          </div>
+        )}
+        {isTyping && (
+          <div className="input-dialog">
+            <span>Enter the text to be inserted in the Image</span>
+            <label className="custom-text-input">
+              <input
+                type="text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => handleTextSubmit(e)}
+              />
             </label>
           </div>
         )}
