@@ -1,6 +1,17 @@
 * {
   margin: 0;
 }
+.sidepanel::-webkit-scrollbar-thumb {
+  background-color: white;
+}
+.sidepanel::-webkit-scrollbar-track {
+  background-color: #000;
+}
+.sidepanel::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+  border-radius: 2px;
+}
 
 .editor-bg {
   background-image: url("/src/images/editor-bg.png");
@@ -79,6 +90,29 @@
     rgba(255, 255, 255, 0.12) inset;
   position: absolute;
   right: 30px;
+  overflow: hidden;
+  overflow-y: scroll;
+}
+
+.filter-container {
+  height: 90%;
+  width: 100%;
+  overflow: hidden;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: white;
+  cursor: pointer;
 }
 
 .image-edit-area {

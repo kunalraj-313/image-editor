@@ -9,6 +9,19 @@ import saveIcon from "./images/save.png";
 import ColorPalette from "./components/ColorPalette";
 
 const ImageCropper = () => {
+  const filterList = [
+    { filterName: "None", filter: "none" },
+    { filterName: "Grayscale", filter: "grayscale(100%)" },
+    { filterName: "Blur", filter: "blur(5px)" },
+    { filterName: "Brightness", filter: "brightness(150%)" },
+    { filterName: "Contrast", filter: "contrast(150%)" },
+    { filterName: "Sepia", filter: "sepia(100%)" },
+    { filterName: "Invert", filter: "invert(100%)" },
+    { filterName: "Hue Rotate", filter: "hue-rotate(90deg)" },
+    { filterName: "Saturate", filter: "saturate(200%)" },
+    { filterName: "Opacity", filter: "opacity(50%)" },
+  ];
+
   const [image, setImage] = useState(null);
   const [color, setColor] = useState("#0000");
   const [tools, setTools] = useState({
@@ -33,6 +46,14 @@ const ImageCropper = () => {
   const [selectedFilter, setSelectedFilter] = useState("");
   const [drawing, setDrawing] = useState(false);
   const [drawStart, setDrawStart] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    console.log("Component Re-rendered");
+    if (image) {
+      imgElement.onload = updateCanvas;
+      imgElement.src = image;
+    }
+  }, [image]);
 
   // const updateCanvas = () => {
   //   if (canvasRef.current) {
@@ -68,7 +89,6 @@ const ImageCropper = () => {
 
       canvas.width = newWidth;
       canvas.height = newHeight;
-
       ctx.drawImage(imgElement, 0, 0, newWidth, newHeight);
     }
   };
@@ -86,14 +106,6 @@ const ImageCropper = () => {
       handleActions(resetActionsArray);
     }
   };
-
-  useEffect(() => {
-    console.log("Component Re-rendered");
-    if (image) {
-      imgElement.onload = updateCanvas;
-      imgElement.src = image;
-    }
-  }, [image]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -213,10 +225,22 @@ const ImageCropper = () => {
     }
   };
 
-  const handleAddFilter = () => {
-    if (image) {
-      //...
-    }
+  const applyFilter = (filter, event) => {
+    event.stopPropagation();
+    canvasRef.current.style.filter = filter;
+    setSelectedFilter(filter);
+    console.log("filter clicked");
+  };
+
+  const saveFilter = () => {
+    let canvas = canvasRef.current;
+    let ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.src = canvas.toDataURL();
+    console.log(selectedFilter);
+    ctx.filter = selectedFilter;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL();
   };
 
   const handleSelectedColor = (val) => {
@@ -224,8 +248,7 @@ const ImageCropper = () => {
   };
 
   const fileSave = () => {
-    let canvas = canvasRef.current;
-    let downlaodURL = canvas.toDataURL();
+    let downlaodURL = saveFilter();
     const downloadLink = document.createElement("a");
     downloadLink.href = downlaodURL;
     downloadLink.download = "canvas_image.png";
@@ -374,6 +397,26 @@ const ImageCropper = () => {
       <div className="sidepanel">
         {(tools.draw || tools.text) && (
           <ColorPalette colorSelector={handleSelectedColor} />
+        )}
+        {tools.filters && (
+          <div className="filters-container">
+            {filterList.map((f) => {
+              return (
+                <div
+                  onClick={(e) => applyFilter(f.filter, e)}
+                  className="filter-selector"
+                >
+                  <img
+                    width="100%"
+                    src={image}
+                    style={{ filter: f.filter }}
+                    alt="thumbnail"
+                  />
+                  <span>{f.filterName}</span>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
