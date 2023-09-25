@@ -22,6 +22,8 @@ const ImageCropper = () => {
     { filterName: "Opacity", filter: "opacity(50%)" },
   ];
 
+  const STACK_SIZE = 5;
+  const actionCount = useRef(0);
   const [image, setImage] = useState(null);
   const [color, setColor] = useState("#0000");
   const [tools, setTools] = useState({
@@ -34,7 +36,8 @@ const ImageCropper = () => {
   const imgElement = new Image();
   const canvasRef = useRef(null);
   const [cropping, setCropping] = useState(false);
-  const [undoList, handleActions] = useState([]);
+  const actionsRef = useRef([]);
+  const redoRef = useRef([]);
   const [textArea, setTextArea] = useState({
     x: null,
     y: null,
@@ -55,15 +58,65 @@ const ImageCropper = () => {
     }
   }, [image]);
 
-  // const updateCanvas = () => {
-  //   if (canvasRef.current) {
-  //     const ctx = canvasRef.current.getContext("2d");
-  //     const { naturalWidth: width, naturalHeight: height } = imgElement;
-  //     ctx.canvas.width = width;
-  //     ctx.canvas.height = height;
-  //     ctx.drawImage(imgElement, 0, 0, width, height);
-  //   }
-  // };
+  useEffect(() => {
+    document.addEventListener("keydown", function (event) {
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === "z") {
+          handleUndoRedo("undo");
+          console.log("UNDO");
+        } else if (event.key === "y") {
+          handleUndoRedo("redo");
+          console.log("REDO");
+        }
+      }
+    });
+  }, []);
+
+  const drawCanvas = (val) => {
+    debugger;
+    let canvas = canvasRef.current;
+    let ctx = canvas.getContext("2d");
+    let img = new Image();
+    img.src = val;
+    img.onload = function () {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+  };
+
+  const addAction = (action) => {
+    if (actionsRef.current.length < STACK_SIZE) {
+      actionsRef.current.push(action);
+    } else {
+      actionsRef.current.shift();
+      actionsRef.current.push(action);
+    }
+  };
+
+  const undo = () => {
+    debugger;
+    if (actionsRef.current.length > 0) {
+      actionsRef.current.pop();
+      if (redoRef.current.length < STACK_SIZE) {
+        redoRef.current.push(actionsRef.current[actionsRef.current.length - 1]);
+      } else {
+        redoRef.current.shift();
+        redoRef.current.push(actionsRef.current[actionsRef.current.length - 1]);
+      }
+      drawCanvas(actionsRef.current[actionsRef.current.length - 1]);
+    } else {
+      alert("There is no action performed");
+    }
+  };
+
+  const redo = () => {
+    if (redoRef.current.length > 0) {
+      actionsRef.current.push(redoRef.current[redoRef.current.length - 1]);
+      redoRef.current.pop();
+      drawCanvas(actionsRef.current[actionsRef.current - 1]);
+    } else {
+      alert("There is nothing to redo!");
+    }
+  };
 
   const updateCanvas = () => {
     if (canvasRef.current) {
@@ -96,15 +149,19 @@ const ImageCropper = () => {
   const canvasStateChange = () => {
     const canvas = canvasRef.current;
     let lastAction = canvas.toDataURL();
-    let actions = undoList;
-    if (actions.length < 6) {
-      actions.push(lastAction);
-      handleActions(actions);
-    } else {
-      let resetActionsArray = actions.shift();
-      resetActionsArray.push(lastAction);
-      handleActions(resetActionsArray);
+    addAction(lastAction);
+  };
+
+  const handleUndoRedo = (action) => {
+    let canvas = canvasRef.current;
+    let ctx = canvas.getContext("2d");
+    const img = new Image();
+    if (action === "undo") {
+      undo();
+    } else if (action === "redo") {
+      redo();
     }
+    // ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
   };
 
   const handleFileChange = (e) => {
@@ -119,22 +176,6 @@ const ImageCropper = () => {
       reader.readAsDataURL(file);
     }
   };
-
-  // const handleUndoRedo = () => {
-
-  //   let count = undolist.length - 1;
-
-  //   if (count < undolist.length - 1) {
-
-  //     if (ctrl + z) {
-  //       count--;
-  //       canvas = undolist[count]
-  //     } else if (ctrl + y) {
-  //       count++;
-  //       canvas = undolist[count]
-  //     }
-  //   }
-  // }
 
   const handleMouseDown = (e) => {
     if (canvasRef.current) {
@@ -166,7 +207,7 @@ const ImageCropper = () => {
   };
 
   const handleTextSubmit = (e) => {
-    if (e.key === "Escape") {
+    if (e.key === "Escape" || e.key === "Enter") {
       console.log(e);
       let temp = text;
       const ctx = canvasRef.current.getContext("2d");
@@ -237,10 +278,16 @@ const ImageCropper = () => {
     let ctx = canvas.getContext("2d");
     const img = new Image();
     img.src = canvas.toDataURL();
-    console.log(selectedFilter);
-    ctx.filter = selectedFilter;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL();
+    img.onload = function () {
+      console.log(selectedFilter);
+      ctx.filter = selectedFilter;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      console.log(img.src);
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL(); // This will include the filtered image
+      link.download = "filtered_image.png";
+      link.click();
+    };
   };
 
   const handleSelectedColor = (val) => {
@@ -248,11 +295,7 @@ const ImageCropper = () => {
   };
 
   const fileSave = () => {
-    let downlaodURL = saveFilter();
-    const downloadLink = document.createElement("a");
-    downloadLink.href = downlaodURL;
-    downloadLink.download = "canvas_image.png";
-    downloadLink.click();
+    saveFilter();
   };
   return (
     <div className="editor-bg">
