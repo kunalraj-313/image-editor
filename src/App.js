@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import "./App.css";
 import penIcon from "./images/pen.png";
 import textIcon from "./images/text.png";
-import zoomIcon from "./images/zoom.png";
 import cropIcon from "./images/crop.png";
 import filterIcon from "./images/filter.png";
 import saveIcon from "./images/save.png";
@@ -29,7 +28,6 @@ const ImageCropper = () => {
     draw: true,
     text: false,
     crop: false,
-    zoom: false,
     filters: false,
   });
   const imgElement = new Image();
@@ -337,7 +335,6 @@ const ImageCropper = () => {
                 draw: true,
                 text: false,
                 crop: false,
-                zoom: false,
                 filters: false,
               })
             }
@@ -351,14 +348,13 @@ const ImageCropper = () => {
                 draw: false,
                 text: true,
                 crop: false,
-                zoom: false,
                 filters: false,
               })
             }
           >
             <img className="tool-icon" src={textIcon} />
           </div>
-          <div
+          {/* <div
             className="tool"
             onClick={() =>
               setTools({
@@ -371,7 +367,7 @@ const ImageCropper = () => {
             }
           >
             <img className="tool-icon" src={zoomIcon} />
-          </div>
+          </div> */}
           <div
             className={`tool ${tools.crop ? "active-tool" : ""}`}
             onClick={() =>
@@ -379,7 +375,6 @@ const ImageCropper = () => {
                 draw: false,
                 text: false,
                 crop: true,
-                zoom: false,
                 filters: false,
               })
             }
@@ -393,7 +388,6 @@ const ImageCropper = () => {
                 draw: false,
                 text: false,
                 crop: false,
-                zoom: false,
                 filters: true,
               })
             }
