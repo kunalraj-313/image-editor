@@ -23,7 +23,6 @@ const ImageCropper = () => {
   ];
 
   const STACK_SIZE = 5;
-  const actionCount = useRef(0);
   const [image, setImage] = useState(null);
   const [color, setColor] = useState("#0000");
   const [tools, setTools] = useState({
