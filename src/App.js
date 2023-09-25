@@ -73,7 +73,6 @@ const ImageCropper = () => {
   }, []);
 
   const drawCanvas = (val) => {
-    debugger;
     let canvas = canvasRef.current;
     let ctx = canvas.getContext("2d");
     let img = new Image();
@@ -83,40 +82,71 @@ const ImageCropper = () => {
     };
   };
 
-  const addAction = (action) => {
+  async function addAction(action) {
     if (actionsRef.current.length < STACK_SIZE) {
-      actionsRef.current.push(action);
+      await new Promise((resolve) => {
+        actionsRef.current.push(action);
+        resolve();
+      });
     } else {
-      actionsRef.current.shift();
-      actionsRef.current.push(action);
+      await new Promise((resolve) => {
+        actionsRef.current.shift();
+        actionsRef.current.push(action);
+        resolve();
+      });
     }
-  };
+  }
 
-  const undo = () => {
-    debugger;
+  async function undo() {
     if (actionsRef.current.length > 0) {
-      actionsRef.current.pop();
+      await new Promise((resolve) => {
+        actionsRef.current.pop();
+        resolve();
+      });
       if (redoRef.current.length < STACK_SIZE) {
-        redoRef.current.push(actionsRef.current[actionsRef.current.length - 1]);
+        debugger;
+        await new Promise((resolve) => {
+          redoRef.current.push(
+            actionsRef.current[actionsRef.current.length - 1]
+          );
+          resolve();
+        });
       } else {
-        redoRef.current.shift();
-        redoRef.current.push(actionsRef.current[actionsRef.current.length - 1]);
+        await new Promise((resolve) => {
+          redoRef.current.shift();
+          redoRef.current.push(
+            actionsRef.current[actionsRef.current.length - 1]
+          );
+          resolve();
+        });
       }
       drawCanvas(actionsRef.current[actionsRef.current.length - 1]);
+    } else if (actionsRef.current.length == 0) {
+      await new Promise((resolve) => {
+        actionsRef.current.pop();
+        resolve();
+      });
+      drawCanvas(imgElement);
     } else {
-      alert("There is no action performed");
+      alert("Undo limit reached");
     }
-  };
+  }
 
-  const redo = () => {
+  async function redo() {
     if (redoRef.current.length > 0) {
-      actionsRef.current.push(redoRef.current[redoRef.current.length - 1]);
-      redoRef.current.pop();
-      drawCanvas(actionsRef.current[actionsRef.current - 1]);
+      debugger;
+      await new Promise((resolve) => {
+        actionsRef.current.push(redoRef.current[redoRef.current.length - 1]);
+        redoRef.current.pop();
+        console.log(redoRef.current);
+
+        resolve();
+      });
+      drawCanvas(actionsRef.current[actionsRef.current.length - 1]);
     } else {
-      alert("There is nothing to redo!");
+      alert("Redo limit reached");
     }
-  };
+  }
 
   const updateCanvas = () => {
     if (canvasRef.current) {
