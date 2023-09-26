@@ -96,16 +96,18 @@ const ImageCropper = () => {
 
   async function undo() {
     if (actionsRef.current.length > 0) {
-      await new Promise((resolve) => {
-        actionsRef.current.pop();
-        resolve();
-      });
       if (redoRef.current.length < STACK_SIZE) {
-        debugger;
+        //need to push it first and then add
+
         await new Promise((resolve) => {
           redoRef.current.push(
             actionsRef.current[actionsRef.current.length - 1]
           );
+
+          resolve();
+        });
+        await new Promise((resolve) => {
+          actionsRef.current.pop();
           resolve();
         });
       } else {
@@ -127,18 +129,22 @@ const ImageCropper = () => {
     } else {
       alert("Undo limit reached");
     }
+    console.log(redoRef.current);
   }
 
   async function redo() {
     if (redoRef.current.length > 0) {
       debugger;
-      await new Promise((resolve) => {
-        actionsRef.current.push(redoRef.current[redoRef.current.length - 1]);
-        redoRef.current.pop();
-        console.log(redoRef.current);
+      if (redoRef.current.length < STACK_SIZE) {
+        await new Promise((resolve) => {
+          actionsRef.current.push(redoRef.current[redoRef.current.length - 1]);
+          redoRef.current.pop();
+          console.log(redoRef.current);
 
-        resolve();
-      });
+          resolve();
+        });
+      }
+
       drawCanvas(actionsRef.current[actionsRef.current.length - 1]);
     } else {
       alert("Redo limit reached");
@@ -225,6 +231,9 @@ const ImageCropper = () => {
 
   const handleCanvasClick = (e) => {
     if (tools.text) {
+      if (text !== "") {
+        setText("");
+      }
       toggleTyping(true);
       const rect = canvasRef.current.getBoundingClientRect();
       let xPos = e.clientX - rect.left;
